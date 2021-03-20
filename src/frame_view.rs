@@ -15,11 +15,11 @@ impl FrameView {
     pub fn new() -> Self {
         let frame_viewer = FrameViewer::new();
         let task_tree = TaskTree::new();
-        task_tree.widget_ref().set_vexpand(true);
+        task_tree.widget().set_vexpand(true);
 
         let widget = GtkBox::new(Orientation::Vertical, 18);
-        widget.append(frame_viewer.widget_ref());
-        widget.append(task_tree.widget_ref());
+        widget.append(frame_viewer.widget());
+        widget.append(task_tree.widget());
 
         Self {
             widget,
@@ -35,11 +35,7 @@ impl FrameView {
         Ok(())
     }
 
-    pub fn widget(&self) -> GtkBox {
-        self.widget.clone()
-    }
-
-    pub fn widget_ref(&self) -> &GtkBox {
+    pub fn widget(&self) -> &GtkBox {
         &self.widget
     }
 }

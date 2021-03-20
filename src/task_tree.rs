@@ -16,11 +16,7 @@ impl TaskTree {
         // TODO
     }
 
-    pub fn widget(&self) -> Button {
-        self.widget.clone()
-    }
-
-    pub fn widget_ref(&self) -> &Button {
+    pub fn widget(&self) -> &Button {
         &self.widget
     }
 }

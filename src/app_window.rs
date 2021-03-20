@@ -15,8 +15,8 @@ impl AppWindow {
         let frame_view = FrameView::new();
 
         let views = Stack::new();
-        views.add_titled(frame_view.widget_ref(), Some("frame_view"), "Frame View");
-        views.add_titled(TaskView::new().widget_ref(), Some("task_view"), "Task View");
+        views.add_titled(frame_view.widget(), Some("frame_view"), "Frame View");
+        views.add_titled(TaskView::new().widget(), Some("task_view"), "Task View");
         views.set_margin_top(18);
         views.set_margin_bottom(18);
         views.set_margin_start(18);
@@ -28,7 +28,7 @@ impl AppWindow {
             FileChooserAction::Open,
             None,
             None,
-        );
+        ); // TODO: Only show .wtf files
         file_chooser.connect_response(move |file_chooser, response| {
             if response == ResponseType::Accept {
                 if let Some(profile) = file_chooser.get_file() {
@@ -38,6 +38,7 @@ impl AppWindow {
                 }
             }
         });
+
         let open_profile_button = Button::from_icon_name(Some("document-open-symbolic"));
         open_profile_button.connect_clicked(move |_| file_chooser.show());
 

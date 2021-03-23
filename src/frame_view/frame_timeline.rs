@@ -4,8 +4,9 @@ use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
 use gtk4::prelude::Cast;
 use gtk4::{
-    Align, Button, ListView, NoSelection, OrientableExt, Orientation, Overlay, ScrolledWindow,
-    SignalListItemFactory, Stack, WidgetExt, NONE_SELECTION_MODEL, NONE_WIDGET,
+    Align, Button, CheckButton, CheckButtonExt, CustomFilter, FilterListModel, ListView,
+    NoSelection, OrientableExt, Orientation, Overlay, ScrolledWindow, SignalListItemFactory, Stack,
+    WidgetExt, NONE_FILTER, NONE_SELECTION_MODEL, NONE_WIDGET,
 };
 use std::time::Duration;
 
@@ -13,6 +14,7 @@ pub struct FrameTimeline {
     widget: Stack,
     placeholder_widget: Button,
     list_view: ListView,
+    threshold_toggle: CheckButton,
 }
 
 impl FrameTimeline {
@@ -54,9 +56,13 @@ impl FrameTimeline {
                 .round() as i32);
         frame_threshold.widget().set_margin_top(margin);
 
+        let threshold_toggle = CheckButton::new();
+        threshold_toggle.set_valign(Align::Start);
+
         let content = Overlay::new();
         content.set_child(Some(&scrolled_window));
         content.add_overlay(frame_threshold.widget());
+        content.add_overlay(&threshold_toggle);
 
         let placeholder_widget = Button::with_label("Click To Load A Profile");
         placeholder_widget.add_css_class("title-1");
@@ -69,17 +75,47 @@ impl FrameTimeline {
             widget,
             placeholder_widget,
             list_view,
+            threshold_toggle,
         }
     }
 
     pub fn load_profile(&self, profile: &ProfileData) {
+        let mut above_threshold_count = 0;
+
         let model = ListStore::new(Type::OBJECT);
         for frame_data in profile.frames.iter() {
             let obj = FrameDataObject::new(frame_data.clone());
             model.append(&obj);
+
+            if frame_data.duration > Duration::from_nanos(16666670) {
+                above_threshold_count += 1;
+            }
         }
-        let selection_model = NoSelection::new(Some(&model));
-        self.list_view.set_model(Some(&selection_model));
+        let model = FilterListModel::new(Some(&model), NONE_FILTER);
+
+        self.threshold_toggle.set_label(Some(&format!(
+            "Filter Threshhold ({})",
+            above_threshold_count
+        )));
+        self.threshold_toggle.connect_toggled({
+            let model = model.clone();
+            move |threshold_toggle| {
+                if threshold_toggle.get_active() {
+                    model.set_filter(Some(&CustomFilter::new(|item| {
+                        item.downcast_ref::<FrameDataObject>()
+                            .unwrap()
+                            .get()
+                            .duration
+                            > Duration::from_nanos(16666670)
+                    })));
+                } else {
+                    model.set_filter(NONE_FILTER);
+                }
+            }
+        });
+
+        let model = NoSelection::new(Some(&model));
+        self.list_view.set_model(Some(&model));
 
         self.widget.set_visible_child_name("content");
     }

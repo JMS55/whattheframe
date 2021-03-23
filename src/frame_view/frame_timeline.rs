@@ -1,15 +1,16 @@
-use crate::frame_view::{Frame, FRAME_HEIGHT};
+use crate::frame_view::{Frame, FrameThreshold, FRAME_HEIGHT};
 use crate::profile_data::{FrameDataObject, ProfileData};
 use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
 use gtk4::prelude::Cast;
 use gtk4::{
-    ListView, NoSelection, OrientableExt, Orientation, ScrolledWindow, SignalListItemFactory,
-    NONE_SELECTION_MODEL, NONE_WIDGET,
+    Align, ListView, NoSelection, OrientableExt, Orientation, Overlay, ScrolledWindow,
+    SignalListItemFactory, WidgetExt, NONE_SELECTION_MODEL, NONE_WIDGET,
 };
+use std::time::Duration;
 
 pub struct FrameTimeline {
-    widget: ScrolledWindow,
+    widget: Overlay,
     list_view: ListView,
 }
 
@@ -39,9 +40,22 @@ impl FrameTimeline {
         let list_view = ListView::new(NONE_SELECTION_MODEL, Some(&factory));
         list_view.set_orientation(Orientation::Horizontal);
 
-        let widget = ScrolledWindow::new();
-        widget.set_min_content_height(FRAME_HEIGHT + 10);
-        widget.set_child(Some(&list_view));
+        let scrolled_window = ScrolledWindow::new();
+        scrolled_window.set_min_content_height(FRAME_HEIGHT + 10);
+        scrolled_window.set_child(Some(&list_view));
+
+        let frame_threshold = FrameThreshold::new();
+        frame_threshold.widget().set_valign(Align::Start);
+        // TODO: Clean margin calculation up
+        let margin = (FRAME_HEIGHT - 21)
+            - ((((Duration::from_nanos(16666671).as_secs_f64() * 1000.0) / 24.0)
+                * (FRAME_HEIGHT - 21) as f64)
+                .round() as i32);
+        frame_threshold.widget().set_margin_top(margin);
+
+        let widget = Overlay::new();
+        widget.set_child(Some(&scrolled_window));
+        widget.add_overlay(frame_threshold.widget());
 
         Self { widget, list_view }
     }
@@ -58,7 +72,7 @@ impl FrameTimeline {
         self.list_view.set_model(Some(&selection_model));
     }
 
-    pub fn widget(&self) -> &ScrolledWindow {
+    pub fn widget(&self) -> &Overlay {
         &self.widget
     }
 }

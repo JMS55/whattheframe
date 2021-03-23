@@ -16,8 +16,8 @@ impl FrameThreshold {
                 let y = height as f64 / 2.0;
                 canvas.move_to(0.0, y);
                 canvas.line_to(width as f64, y);
-                canvas.set_source_rgba(51.0 / 255.0, 209.0 / 255.0, 122.0 / 255.0, 0.7);
-                canvas.set_line_width(3.0);
+                canvas.set_source_rgb(51.0 / 255.0, 209.0 / 255.0, 122.0 / 255.0);
+                canvas.set_line_width(2.0);
                 canvas.set_dash(&[8.0], 0.0);
                 canvas.set_line_cap(LineCap::Round);
                 canvas.stroke();

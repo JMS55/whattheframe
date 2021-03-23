@@ -1,4 +1,4 @@
-use crate::frame::Frame;
+use crate::frame::{Frame, FRAME_HEIGHT};
 use crate::profile_data::{FrameDataObject, ProfileData};
 use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
@@ -40,7 +40,7 @@ impl FrameViewer {
         list_view.set_orientation(Orientation::Horizontal);
 
         let widget = ScrolledWindow::new();
-        widget.set_min_content_height(170);
+        widget.set_min_content_height(FRAME_HEIGHT + 10);
         widget.set_child(Some(&list_view));
 
         Self { widget, list_view }

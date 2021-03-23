@@ -9,6 +9,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
 
+pub const FRAME_WIDTH: i32 = 12;
+pub const FRAME_HEIGHT: i32 = 140;
+
 mod inner {
     use super::*;
 
@@ -33,33 +36,29 @@ mod inner {
         fn constructed(&self, obj: &Self::Type) {
             self.parent_constructed(obj);
 
-            obj.set_content_width(14);
-            obj.set_content_height(162);
+            obj.set_content_width(FRAME_WIDTH);
+            obj.set_content_height(FRAME_HEIGHT);
 
             obj.set_draw_func({
                 let data = self.data.clone();
                 move |_: &DrawingArea, canvas: &Context, _: i32, _: i32| {
                     if let Some(data) = &*data.borrow() {
                         let duration = data.get().duration;
-
                         let duration_ms = duration.as_secs_f64() * 1000.0;
-                        let height = (duration_ms / 24.0).clamp(0.1, 1.0) * 160.0;
-                        canvas.rectangle(1.0, 161.0 - height, 12.0, height);
+                        let height = (duration_ms / 24.0).clamp(0.1, 1.0) * (FRAME_HEIGHT as f64);
 
+                        canvas.rectangle(
+                            1.0,
+                            FRAME_HEIGHT as f64 - height,
+                            FRAME_WIDTH as f64,
+                            height,
+                        );
                         if duration > Duration::from_nanos(16666670) {
-                            canvas.set_source_rgb(246.0 / 255.0, 97.0 / 255.0, 81.0 / 255.0);
-                        } else {
-                            canvas.set_source_rgb(153.0 / 255.0, 193.0 / 255.0, 241.0 / 255.0);
-                        }
-                        canvas.fill_preserve();
-
-                        if duration > Duration::from_nanos(16666670) {
-                            canvas.set_source_rgb(224.0 / 255.0, 27.0 / 255.0, 36.0 / 255.0);
+                            canvas.set_source_rgb(237.0 / 255.0, 51.0 / 255.0, 59.0 / 255.0);
                         } else {
                             canvas.set_source_rgb(98.0 / 255.0, 160.0 / 255.0, 234.0 / 255.0);
                         }
-                        canvas.set_line_width(1.0);
-                        canvas.stroke();
+                        canvas.fill();
                     }
                 }
             });

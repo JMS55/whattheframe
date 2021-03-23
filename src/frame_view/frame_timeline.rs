@@ -4,13 +4,14 @@ use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
 use gtk4::prelude::Cast;
 use gtk4::{
-    Align, ListView, NoSelection, OrientableExt, Orientation, Overlay, ScrolledWindow,
-    SignalListItemFactory, WidgetExt, NONE_SELECTION_MODEL, NONE_WIDGET,
+    Align, Button, ListView, NoSelection, OrientableExt, Orientation, Overlay, ScrolledWindow,
+    SignalListItemFactory, Stack, WidgetExt, NONE_SELECTION_MODEL, NONE_WIDGET,
 };
 use std::time::Duration;
 
 pub struct FrameTimeline {
-    widget: Overlay,
+    widget: Stack,
+    placeholder_widget: Button,
     list_view: ListView,
 }
 
@@ -53,11 +54,22 @@ impl FrameTimeline {
                 .round() as i32);
         frame_threshold.widget().set_margin_top(margin);
 
-        let widget = Overlay::new();
-        widget.set_child(Some(&scrolled_window));
-        widget.add_overlay(frame_threshold.widget());
+        let content = Overlay::new();
+        content.set_child(Some(&scrolled_window));
+        content.add_overlay(frame_threshold.widget());
 
-        Self { widget, list_view }
+        let placeholder_widget = Button::with_label("Click To Load A Profile");
+        placeholder_widget.add_css_class("title-1");
+
+        let widget = Stack::new();
+        widget.add_named(&placeholder_widget, Some("placeholder"));
+        widget.add_named(&content, Some("content"));
+
+        Self {
+            widget,
+            placeholder_widget,
+            list_view,
+        }
     }
 
     pub fn load_profile(&self, profile: &ProfileData) {
@@ -66,13 +78,17 @@ impl FrameTimeline {
             let obj = FrameDataObject::new(frame_data.clone());
             model.append(&obj);
         }
-
         let selection_model = NoSelection::new(Some(&model));
-
         self.list_view.set_model(Some(&selection_model));
+
+        self.widget.set_visible_child_name("content");
     }
 
-    pub fn widget(&self) -> &Overlay {
+    pub fn widget(&self) -> &Stack {
         &self.widget
+    }
+
+    pub fn placeholder_widget(&self) -> &Button {
+        &self.placeholder_widget
     }
 }

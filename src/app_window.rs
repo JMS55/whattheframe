@@ -22,13 +22,26 @@ impl AppWindow {
         views.set_margin_start(18);
         views.set_margin_end(18);
 
+        let open_profile_button = Button::from_icon_name(Some("document-open-symbolic"));
+
+        // TODO: Only show .wtf files
         let file_chooser = FileChooserNative::new(
             Some("Open Profile"),
             Some(&window),
             FileChooserAction::Open,
             None,
             None,
-        ); // TODO: Only show .wtf files
+        );
+        open_profile_button.connect_clicked({
+            let file_chooser = file_chooser.clone();
+            move |_| file_chooser.show()
+        });
+        frame_view
+            .frame_timeline_placeholder_widget()
+            .connect_clicked({
+                let file_chooser = file_chooser.clone();
+                move |_| file_chooser.show()
+            });
         file_chooser.connect_response(move |file_chooser, response| {
             if response == ResponseType::Accept {
                 if let Some(profile) = file_chooser.get_file() {
@@ -38,9 +51,6 @@ impl AppWindow {
                 }
             }
         });
-
-        let open_profile_button = Button::from_icon_name(Some("document-open-symbolic"));
-        open_profile_button.connect_clicked(move |_| file_chooser.show());
 
         let view_switcher = StackSwitcher::new();
         view_switcher.set_stack(Some(&views));

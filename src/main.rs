@@ -1,10 +1,6 @@
 mod app_window;
-mod frame;
-mod frame_threshold;
 mod frame_view;
-mod frame_viewer;
 mod profile_data;
-mod task_tree;
 mod task_view;
 
 use crate::app_window::AppWindow;

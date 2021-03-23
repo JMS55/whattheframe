@@ -1,19 +1,19 @@
-use crate::frame_viewer::FrameViewer;
+use crate::frame_view::FrameTimeline;
+use crate::frame_view::TaskTree;
 use crate::profile_data::ProfileData;
-use crate::task_tree::TaskTree;
 use gtk4::gio::File;
 use gtk4::{Box as GtkBox, BoxExt, Orientation, WidgetExt};
 use std::error::Error;
 
 pub struct FrameView {
     widget: GtkBox,
-    frame_viewer: FrameViewer,
+    frame_viewer: FrameTimeline,
     task_tree: TaskTree,
 }
 
 impl FrameView {
     pub fn new() -> Self {
-        let frame_viewer = FrameViewer::new();
+        let frame_viewer = FrameTimeline::new();
         let task_tree = TaskTree::new();
         task_tree.widget().set_vexpand(true);
 

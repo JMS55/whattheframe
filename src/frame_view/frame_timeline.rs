@@ -1,4 +1,4 @@
-use crate::frame::{Frame, FRAME_HEIGHT};
+use crate::frame_view::{Frame, FRAME_HEIGHT};
 use crate::profile_data::{FrameDataObject, ProfileData};
 use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
@@ -8,12 +8,12 @@ use gtk4::{
     NONE_SELECTION_MODEL, NONE_WIDGET,
 };
 
-pub struct FrameViewer {
+pub struct FrameTimeline {
     widget: ScrolledWindow,
     list_view: ListView,
 }
 
-impl FrameViewer {
+impl FrameTimeline {
     pub fn new() -> Self {
         let factory = SignalListItemFactory::new();
         factory.connect_setup(|_, list_item| {

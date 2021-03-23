@@ -2,7 +2,7 @@ use crate::frame_view::FrameView;
 use crate::task_view::TaskView;
 use gtk4::{
     Application, ApplicationWindow, Button, ButtonExt, FileChooserAction, FileChooserExt,
-    FileChooserNative, GtkWindowExt, HeaderBar, NativeDialogExt, ResponseType, Stack,
+    FileChooserNative, FileFilter, GtkWindowExt, HeaderBar, NativeDialogExt, ResponseType, Stack,
     StackSwitcher, WidgetExt,
 };
 
@@ -24,7 +24,6 @@ impl AppWindow {
 
         let open_profile_button = Button::from_icon_name(Some("document-open-symbolic"));
 
-        // TODO: Only show .wtf files
         let file_chooser = FileChooserNative::new(
             Some("Open Profile"),
             Some(&window),
@@ -32,6 +31,16 @@ impl AppWindow {
             None,
             None,
         );
+
+        let wtf_filter = FileFilter::new();
+        wtf_filter.set_name(Some("WhatTheFrame Profile (.wtf)"));
+        wtf_filter.add_pattern("*.wtf");
+        file_chooser.add_filter(&wtf_filter);
+        let any_filter = FileFilter::new();
+        any_filter.set_name(Some("Any"));
+        any_filter.add_pattern("*");
+        file_chooser.add_filter(&any_filter);
+
         open_profile_button.connect_clicked({
             let file_chooser = file_chooser.clone();
             move |_| file_chooser.show()
@@ -59,6 +68,7 @@ impl AppWindow {
         header_bar.pack_start(&open_profile_button);
         header_bar.set_title_widget(Some(&view_switcher));
 
+        window.set_default_size(830, 560);
         window.set_titlebar(Some(&header_bar));
         window.set_child(Some(&views));
         window.show();

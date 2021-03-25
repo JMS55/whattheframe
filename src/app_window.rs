@@ -1,8 +1,8 @@
 use crate::frame_view::FrameView;
 use crate::task_view::TaskView;
 use gtk4::{
-    Application, ApplicationWindow, Button, ButtonExt, ButtonsType, DialogFlags, FileChooserAction,
-    FileChooserExt, FileChooserNative, FileFilter, GtkWindowExt, HeaderBar, MessageDialog,
+    Application, ApplicationWindow, Box as GtkBox, BoxExt, Button, ButtonExt, FileChooserAction,
+    FileChooserExt, FileChooserNative, FileFilter, GtkWindowExt, HeaderBar, InfoBar, Label,
     MessageType, NativeDialogExt, ResponseType, Stack, StackSwitcher, WidgetExt,
 };
 
@@ -20,6 +20,18 @@ impl AppWindow {
         views.set_margin_start(18);
         views.set_margin_end(18);
 
+        let load_profile_error_label = Label::new(Some("Failed to Load Profile"));
+        let load_profile_error_bar = InfoBar::new();
+        load_profile_error_bar.add_child(&load_profile_error_label);
+        load_profile_error_bar.set_message_type(MessageType::Error);
+        load_profile_error_bar.set_show_close_button(true);
+        load_profile_error_bar.connect_response(|bar, _| bar.hide());
+        load_profile_error_bar.hide();
+
+        let content_area = GtkBox::new(gtk4::Orientation::Vertical, 0);
+        content_area.append(&load_profile_error_bar);
+        content_area.append(&views);
+
         let open_profile_button = Button::from_icon_name(Some("document-open-symbolic"));
 
         let view_switcher = StackSwitcher::new();
@@ -32,16 +44,7 @@ impl AppWindow {
         let window = ApplicationWindow::new(application);
         window.set_default_size(830, 560);
         window.set_titlebar(Some(&header_bar));
-        window.set_child(Some(&views));
-
-        // let load_profile_error_dialog = MessageDialog::new(
-        //     Some(&window),
-        //     DialogFlags::MODAL | DialogFlags::DESTROY_WITH_PARENT,
-        //     MessageType::Error,
-        //     ButtonsType::Close,
-        //     "",
-        // );
-        // load_profile_error_dialog.set_title(Some("Error Loading Profile"));
+        window.set_child(Some(&content_area));
 
         let file_chooser = FileChooserNative::new(
             Some("Open Profile"),
@@ -75,8 +78,7 @@ impl AppWindow {
             if response == ResponseType::Accept {
                 if let Some(profile) = file_chooser.get_file() {
                     if let Err(_) = frame_view.load_profile(profile) {
-                        // TODO: Error message
-                        // load_profile_error_dialog.show();
+                        load_profile_error_bar.show();
                     }
                 }
             }

@@ -35,37 +35,38 @@ impl ProfileData {
 mod inner {
     use super::*;
 
-    pub struct FrameDataObject(pub RefCell<FrameData>);
+    pub struct TaskObject(pub RefCell<TaskData>);
 
     #[glib::object_subclass]
-    impl ObjectSubclass for FrameDataObject {
-        const NAME: &'static str = "FrameDataObject";
-        type Type = super::FrameDataObject;
+    impl ObjectSubclass for TaskObject {
+        const NAME: &'static str = "TaskObject";
+        type Type = super::TaskObject;
         type ParentType = Object;
 
         fn new() -> Self {
-            Self(RefCell::new(FrameData {
+            Self(RefCell::new(TaskData {
+                name: String::new(),
                 duration: Duration::from_secs(0),
-                tasks: Box::new([]),
+                subtasks: Box::new([]),
             }))
         }
     }
 
-    impl ObjectImpl for FrameDataObject {}
+    impl ObjectImpl for TaskObject {}
 }
 
 glib::wrapper! {
-    pub struct FrameDataObject(ObjectSubclass<inner::FrameDataObject>);
+    pub struct TaskObject(ObjectSubclass<inner::TaskObject>);
 }
 
-impl FrameDataObject {
-    pub fn new(data: FrameData) -> Self {
+impl TaskObject {
+    pub fn new(data: TaskData) -> Self {
         let obj = Object::new(&[]).unwrap();
-        *inner::FrameDataObject::from_instance(&obj).0.borrow_mut() = data;
+        *inner::TaskObject::from_instance(&obj).0.borrow_mut() = data;
         obj
     }
 
-    pub fn get(&self) -> Ref<FrameData> {
-        inner::FrameDataObject::from_instance(self).0.borrow()
+    pub fn get(&self) -> Ref<TaskData> {
+        inner::TaskObject::from_instance(self).0.borrow()
     }
 }

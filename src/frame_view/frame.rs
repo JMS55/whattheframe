@@ -1,4 +1,4 @@
-use crate::profile_data::FrameDataObject;
+use crate::profile_data::TaskObject;
 use gtk4::cairo::Context;
 use gtk4::glib::{self, Object};
 use gtk4::subclass::prelude::{
@@ -16,7 +16,7 @@ mod inner {
     use super::*;
 
     pub struct Frame {
-        pub data: Rc<RefCell<Option<FrameDataObject>>>,
+        pub data: Rc<RefCell<Option<TaskObject>>>,
     }
 
     #[glib::object_subclass]
@@ -45,7 +45,7 @@ mod inner {
                     if let Some(data) = &*data.borrow() {
                         let duration = data.get().duration;
                         let duration_ms = duration.as_secs_f64() * 1000.0;
-                        let height = (duration_ms / 24.0).clamp(0.1, 1.0) * (FRAME_HEIGHT as f64);
+                        let height = (duration_ms / 24.0).clamp(0.05, 1.0) * (FRAME_HEIGHT as f64);
 
                         canvas.rectangle(
                             1.0,
@@ -79,7 +79,7 @@ impl Frame {
         Object::new(&[]).unwrap()
     }
 
-    pub fn set_data(&self, data: Option<FrameDataObject>) {
+    pub fn set_data(&self, data: Option<TaskObject>) {
         *inner::Frame::from_instance(self).data.borrow_mut() = data;
     }
 }

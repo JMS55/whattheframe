@@ -1,12 +1,12 @@
 use crate::frame_view::{Frame, FrameThreshold, FRAME_HEIGHT};
-use crate::profile_data::{FrameDataObject, ProfileData};
+use crate::profile_data::TaskObject;
 use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
 use gtk4::prelude::Cast;
 use gtk4::{
     Align, Button, CheckButton, CheckButtonExt, CustomFilter, FilterListModel, ListView,
-    NoSelection, OrientableExt, Orientation, Overlay, ScrolledWindow, SignalListItemFactory, Stack,
-    WidgetExt, NONE_FILTER, NONE_SELECTION_MODEL, NONE_WIDGET,
+    OrientableExt, Orientation, Overlay, ScrolledWindow, SelectionModelExt, SignalListItemFactory,
+    SingleSelection, Stack, WidgetExt, NONE_FILTER, NONE_SELECTION_MODEL, NONE_WIDGET,
 };
 use std::time::Duration;
 
@@ -28,7 +28,7 @@ impl FrameTimeline {
             let frame_data = list_item
                 .get_item()
                 .unwrap()
-                .downcast::<FrameDataObject>()
+                .downcast::<TaskObject>()
                 .unwrap();
             frame.set_data(Some(frame_data));
         });
@@ -64,7 +64,7 @@ impl FrameTimeline {
         content.add_overlay(frame_threshold.widget());
         content.add_overlay(&threshold_toggle);
 
-        let placeholder_widget = Button::with_label("Click To Load A Profile");
+        let placeholder_widget = Button::with_label("Load Profile");
         placeholder_widget.add_css_class("title-1");
 
         let widget = Stack::new();
@@ -79,17 +79,17 @@ impl FrameTimeline {
         }
     }
 
-    pub fn load_profile(&self, profile: &ProfileData) {
-        let mut above_threshold_count = 0;
-
+    pub fn load_frames<F>(
+        &self,
+        frames: &[TaskObject],
+        above_threshold_count: usize,
+        on_frame_selection_change: F,
+    ) where
+        F: Fn(Option<TaskObject>) + 'static,
+    {
         let model = ListStore::new(Type::OBJECT);
-        for frame_data in profile.frames.iter() {
-            let obj = FrameDataObject::new(frame_data.clone());
-            model.append(&obj);
-
-            if frame_data.duration > Duration::from_nanos(16666670) {
-                above_threshold_count += 1;
-            }
+        for frame in frames {
+            model.append(frame);
         }
         let model = FilterListModel::new(Some(&model), NONE_FILTER);
 
@@ -102,10 +102,7 @@ impl FrameTimeline {
             move |threshold_toggle| {
                 if threshold_toggle.get_active() {
                     model.set_filter(Some(&CustomFilter::new(|item| {
-                        item.downcast_ref::<FrameDataObject>()
-                            .unwrap()
-                            .get()
-                            .duration
+                        item.downcast_ref::<TaskObject>().unwrap().get().duration
                             > Duration::from_nanos(16666670)
                     })));
                 } else {
@@ -114,7 +111,14 @@ impl FrameTimeline {
             }
         });
 
-        let model = NoSelection::new(Some(&model));
+        let model = SingleSelection::new(Some(&model));
+        model.connect_selection_changed(move |model, _, _| {
+            let task_data = model
+                .get_selected_item()
+                .map(|d| d.downcast::<TaskObject>().unwrap());
+            (on_frame_selection_change)(task_data);
+        });
+
         self.list_view.set_model(Some(&model));
 
         self.widget.set_visible_child_name("content");

@@ -3,8 +3,8 @@ use gtk4::gio::{ListModel, ListStore};
 use gtk4::glib::Type;
 use gtk4::prelude::Cast;
 use gtk4::{
-    Label, ListView, NoSelection, ScrolledWindow, SignalListItemFactory, TreeListModel,
-    TreeListRow, NONE_SELECTION_MODEL, NONE_WIDGET,
+    Label, ListView, NoSelection, ScrolledWindow, SignalListItemFactory, TreeExpander,
+    TreeListModel, TreeListRow, NONE_SELECTION_MODEL, NONE_WIDGET,
 };
 use std::cmp::Reverse;
 
@@ -17,24 +17,45 @@ impl TaskTree {
     pub fn new() -> Self {
         let factory = SignalListItemFactory::new();
         factory.connect_setup(|_, list_item| {
-            list_item.set_child(Some(&Label::new(None)));
+            let row_expander = TreeExpander::new();
+            row_expander.set_child(Some(&Label::new(None)));
+            list_item.set_child(Some(&row_expander));
         });
         factory.connect_bind(|_, list_item| {
-            let label = list_item.get_child().unwrap().downcast::<Label>().unwrap();
-            let task = list_item
+            let row = list_item
                 .get_item()
                 .unwrap()
                 .downcast::<TreeListRow>()
-                .unwrap()
-                .get_item()
-                .unwrap()
-                .downcast::<TaskObject>()
                 .unwrap();
+            let row_expander = list_item
+                .get_child()
+                .unwrap()
+                .downcast::<TreeExpander>()
+                .unwrap();
+            row_expander.set_list_row(Some(&row));
+
+            let label = row_expander
+                .get_child()
+                .unwrap()
+                .downcast::<Label>()
+                .unwrap();
+            let task = row.get_item().unwrap().downcast::<TaskObject>().unwrap();
+
             let task_duration_ms = task.get().duration.as_secs_f64() * 1000.0;
             label.set_label(&format!("{} ({:.2}ms)", task.get().name, task_duration_ms));
         });
         factory.connect_unbind(|_, list_item| {
-            let label = list_item.get_child().unwrap().downcast::<Label>().unwrap();
+            let row_expander = list_item
+                .get_child()
+                .unwrap()
+                .downcast::<TreeExpander>()
+                .unwrap();
+            let label = row_expander
+                .get_child()
+                .unwrap()
+                .downcast::<Label>()
+                .unwrap();
+            row_expander.set_list_row(None);
             label.set_label("");
         });
         factory.connect_teardown(|_, list_item| {

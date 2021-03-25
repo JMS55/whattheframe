@@ -112,6 +112,7 @@ impl FrameTimeline {
         });
 
         let model = SingleSelection::new(Some(&model));
+        model.set_can_unselect(true);
         model.connect_selection_changed(move |model, _, _| {
             let task_data = model
                 .get_selected_item()

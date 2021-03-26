@@ -41,6 +41,7 @@ impl FrameTimeline {
 
         let list_view = ListView::new(NONE_SELECTION_MODEL, Some(&factory));
         list_view.set_orientation(Orientation::Horizontal);
+        list_view.add_css_class("frame-timeline");
 
         let scrolled_window = ScrolledWindow::new();
         scrolled_window.set_min_content_height(FRAME_HEIGHT + 10);

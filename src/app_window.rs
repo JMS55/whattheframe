@@ -1,10 +1,9 @@
-use crate::frame_view::FrameView;
-use crate::task_view::TaskView;
+use crate::views::Views;
 use gtk4::prelude::ApplicationExt;
 use gtk4::{
     Application, Box as GtkBox, BoxExt, Button, ButtonExt, FileChooserAction, FileChooserExt,
     FileChooserNative, FileFilter, GtkWindowExt, InfoBar, Label, MessageType, NativeDialogExt,
-    ResponseType, Stack, WidgetExt,
+    ResponseType, WidgetExt,
 };
 use libadwaita::{ApplicationWindow, ApplicationWindowExt, HeaderBar, ViewSwitcher};
 
@@ -12,24 +11,11 @@ pub struct AppWindow {}
 
 impl AppWindow {
     pub fn new(application: &Application) {
-        let frame_view = FrameView::new();
-        let task_view = TaskView::new();
-
-        let views = Stack::new();
-        views.add_titled(frame_view.widget(), Some("frame_view"), "Frame View");
-        views.add_titled(task_view.widget(), Some("task_view"), "Task View");
-        views
-            .get_page(frame_view.widget())
-            .unwrap()
-            .set_icon_name("frame-view-symbolic");
-        views
-            .get_page(task_view.widget())
-            .unwrap()
-            .set_icon_name("task-view-symbolic");
-        views.set_margin_top(18);
-        views.set_margin_bottom(18);
-        views.set_margin_start(18);
-        views.set_margin_end(18);
+        let views = Views::new();
+        views.widget().set_margin_top(18);
+        views.widget().set_margin_bottom(18);
+        views.widget().set_margin_start(18);
+        views.widget().set_margin_end(18);
 
         let load_profile_error_label = Label::new(Some("Failed to Load Profile"));
         let load_profile_error_bar = InfoBar::new();
@@ -41,12 +27,11 @@ impl AppWindow {
 
         let content_area = GtkBox::new(gtk4::Orientation::Vertical, 0);
         content_area.append(&load_profile_error_bar);
-        content_area.append(&views);
+        content_area.append(views.widget());
 
-        let open_profile_button = Button::from_icon_name(Some("profile-symbolic"));
+        let open_profile_button = Button::with_label("Open Profile");
 
         let view_switcher = ViewSwitcher::new();
-        view_switcher.set_stack(Some(&views));
 
         let header_bar = HeaderBar::new();
         header_bar.pack_start(&open_profile_button);
@@ -81,18 +66,13 @@ impl AppWindow {
             let file_chooser = file_chooser.clone();
             move |_| file_chooser.show()
         });
-        frame_view
-            .frame_timeline_placeholder_widget()
-            .connect_clicked({
-                let file_chooser = file_chooser.clone();
-                move |_| file_chooser.show()
-            });
 
         file_chooser.connect_response(move |file_chooser, response| {
             if response == ResponseType::Accept {
                 if let Some(profile) = file_chooser.get_file() {
-                    if let Err(_) = frame_view.load_profile(profile) {
-                        load_profile_error_bar.show();
+                    match views.load_profile(profile) {
+                        Ok(views) => view_switcher.set_stack(Some(views)),
+                        Err(_) => load_profile_error_bar.show(),
                     }
                 }
             }

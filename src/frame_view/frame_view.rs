@@ -1,11 +1,8 @@
 use crate::frame_view::FrameTimeline;
 use crate::frame_view::TaskTree;
-use crate::profile_data::{ProfileData, TaskData, TaskObject};
-use gtk4::gio::File;
-use gtk4::{Box as GtkBox, BoxExt, Button, Orientation, WidgetExt};
-use std::error::Error;
+use crate::profile_data::TaskObject;
+use gtk4::{Box as GtkBox, BoxExt, Orientation, WidgetExt};
 use std::rc::Rc;
-use std::time::Duration;
 
 pub struct FrameView {
     widget: GtkBox,
@@ -31,41 +28,19 @@ impl FrameView {
         }
     }
 
-    pub fn load_profile(&self, file: File) -> Result<(), Box<dyn Error>> {
-        let tasks = ProfileData::from_file(file)?
-            .frames
-            .into_iter()
-            .enumerate()
-            .map(|(i, frame)| {
-                TaskObject::new(TaskData {
-                    name: format!("Frame #{}", i + 1),
-                    duration: frame.duration,
-                    subtasks: frame.tasks.clone(),
-                })
-            })
-            .collect::<Vec<TaskObject>>();
-        let above_threshold_count = tasks
-            .iter()
-            .filter(|frame| frame.get().duration > Duration::from_nanos(16666670))
-            .count();
-
+    pub fn load_frames(&self, frames: &[TaskObject], above_threshold_count: usize) {
         let on_timeline_frame_selection_change = {
             let task_tree = self.task_tree.clone();
             move |frame| task_tree.set_frame(frame)
         };
         self.frame_timeline.load_frames(
-            &tasks,
+            frames,
             above_threshold_count,
             on_timeline_frame_selection_change,
         );
-        Ok(())
     }
 
     pub fn widget(&self) -> &GtkBox {
         &self.widget
-    }
-
-    pub fn frame_timeline_placeholder_widget(&self) -> &Button {
-        self.frame_timeline.placeholder_widget()
     }
 }

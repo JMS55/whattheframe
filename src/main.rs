@@ -2,6 +2,7 @@ mod app_window;
 mod frame_view;
 mod profile_data;
 mod task_view;
+mod views;
 
 use crate::app_window::AppWindow;
 use gtk4::gdk::Display;

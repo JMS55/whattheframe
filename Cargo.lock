@@ -435,6 +435,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
+name = "libadwaita"
+version = "0.1.0"
+source = "git+https://gitlab.gnome.org/bilelmoussaoui/libadwaita-rs#6ae4d3670565064acc9da2f51434eca0a0c51ac9"
+dependencies = [
+ "bitflags",
+ "gdk-pixbuf",
+ "gdk4",
+ "gio",
+ "glib",
+ "gtk4",
+ "lazy_static",
+ "libadwaita-sys",
+ "libc",
+ "pango",
+]
+
+[[package]]
+name = "libadwaita-sys"
+version = "0.1.0"
+source = "git+https://gitlab.gnome.org/bilelmoussaoui/libadwaita-rs#6ae4d3670565064acc9da2f51434eca0a0c51ac9"
+dependencies = [
+ "gdk-pixbuf-sys",
+ "gdk4-sys",
+ "gio-sys",
+ "glib-sys",
+ "gobject-sys",
+ "gtk4-sys",
+ "libc",
+ "pango-sys",
+ "system-deps",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -727,6 +766,7 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "gtk4",
+ "libadwaita",
  "serde",
 ]
 

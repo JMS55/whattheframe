@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/github/jms55/WhatTheFrame">
+    <file>stylesheet.css</file>
+    <file preprocess="xml-stripblanks" alias="icons/scalable/actions/profile-symbolic.svg">profile-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="icons/scalable/actions/frame-view-symbolic.svg">frame-view-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="icons/scalable/actions/task-view-symbolic.svg">task-view-symbolic.svg</file>
+  </gresource>
+</gresources>

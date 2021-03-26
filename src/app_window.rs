@@ -1,20 +1,31 @@
 use crate::frame_view::FrameView;
 use crate::task_view::TaskView;
+use gtk4::prelude::ApplicationExt;
 use gtk4::{
-    Application, ApplicationWindow, Box as GtkBox, BoxExt, Button, ButtonExt, FileChooserAction,
-    FileChooserExt, FileChooserNative, FileFilter, GtkWindowExt, HeaderBar, InfoBar, Label,
-    MessageType, NativeDialogExt, ResponseType, Stack, StackSwitcher, WidgetExt,
+    Application, Box as GtkBox, BoxExt, Button, ButtonExt, FileChooserAction, FileChooserExt,
+    FileChooserNative, FileFilter, GtkWindowExt, InfoBar, Label, MessageType, NativeDialogExt,
+    ResponseType, Stack, WidgetExt,
 };
+use libadwaita::{ApplicationWindow, ApplicationWindowExt, HeaderBar, ViewSwitcher};
 
 pub struct AppWindow {}
 
 impl AppWindow {
     pub fn new(application: &Application) {
         let frame_view = FrameView::new();
+        let task_view = TaskView::new();
 
         let views = Stack::new();
         views.add_titled(frame_view.widget(), Some("frame_view"), "Frame View");
-        views.add_titled(TaskView::new().widget(), Some("task_view"), "Task View");
+        views.add_titled(task_view.widget(), Some("task_view"), "Task View");
+        views
+            .get_page(frame_view.widget())
+            .unwrap()
+            .set_icon_name("frame-view-symbolic");
+        views
+            .get_page(task_view.widget())
+            .unwrap()
+            .set_icon_name("task-view-symbolic");
         views.set_margin_top(18);
         views.set_margin_bottom(18);
         views.set_margin_start(18);
@@ -32,19 +43,22 @@ impl AppWindow {
         content_area.append(&load_profile_error_bar);
         content_area.append(&views);
 
-        let open_profile_button = Button::from_icon_name(Some("document-open-symbolic"));
+        let open_profile_button = Button::from_icon_name(Some("profile-symbolic"));
 
-        let view_switcher = StackSwitcher::new();
+        let view_switcher = ViewSwitcher::new();
         view_switcher.set_stack(Some(&views));
 
         let header_bar = HeaderBar::new();
         header_bar.pack_start(&open_profile_button);
         header_bar.set_title_widget(Some(&view_switcher));
 
+        let window_content = GtkBox::new(gtk4::Orientation::Vertical, 0);
+        window_content.append(&header_bar);
+        window_content.append(&content_area);
+
         let window = ApplicationWindow::new(application);
         window.set_default_size(830, 560);
-        window.set_titlebar(Some(&header_bar));
-        window.set_child(Some(&content_area));
+        ApplicationWindowExt::set_child(&window, Some(&window_content));
 
         let file_chooser = FileChooserNative::new(
             Some("Open Profile"),
@@ -84,6 +98,8 @@ impl AppWindow {
             }
         });
 
-        window.show();
+        application.connect_activate(move |_| {
+            window.show();
+        });
     }
 }

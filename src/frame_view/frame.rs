@@ -1,4 +1,4 @@
-use crate::profile_data::TaskObject;
+use crate::profile_data::{TaskData, TaskObject};
 use gtk4::cairo::Context;
 use gtk4::glib::{self, Object};
 use gtk4::subclass::prelude::{
@@ -16,7 +16,7 @@ mod inner {
     use super::*;
 
     pub struct Frame {
-        pub data: Rc<RefCell<Option<TaskObject>>>,
+        pub data: Rc<RefCell<TaskObject>>,
     }
 
     #[glib::object_subclass]
@@ -27,7 +27,11 @@ mod inner {
 
         fn new() -> Self {
             Self {
-                data: Rc::new(RefCell::new(None)),
+                data: Rc::new(RefCell::new(TaskObject::new(TaskData {
+                    name: String::new(),
+                    duration: Duration::default(),
+                    subtasks: Box::new([]),
+                }))),
             }
         }
     }
@@ -42,24 +46,22 @@ mod inner {
             obj.set_draw_func({
                 let data = self.data.clone();
                 move |_: &DrawingArea, canvas: &Context, _: i32, _: i32| {
-                    if let Some(data) = &*data.borrow() {
-                        let duration = data.get().duration;
-                        let duration_ms = duration.as_secs_f64() * 1000.0;
-                        let height = (duration_ms / 24.0).clamp(0.05, 1.0) * (FRAME_HEIGHT as f64);
+                    let duration = data.borrow().get().duration;
+                    let duration_ms = duration.as_secs_f64() * 1000.0;
+                    let height = (duration_ms / 24.0).clamp(0.05, 1.0) * (FRAME_HEIGHT as f64);
 
-                        canvas.rectangle(
-                            1.0,
-                            FRAME_HEIGHT as f64 - height,
-                            FRAME_WIDTH as f64,
-                            height,
-                        );
-                        if duration > Duration::from_nanos(16666670) {
-                            canvas.set_source_rgb(237.0 / 255.0, 51.0 / 255.0, 59.0 / 255.0);
-                        } else {
-                            canvas.set_source_rgb(98.0 / 255.0, 160.0 / 255.0, 234.0 / 255.0);
-                        }
-                        canvas.fill();
+                    canvas.rectangle(
+                        1.0,
+                        FRAME_HEIGHT as f64 - height,
+                        FRAME_WIDTH as f64,
+                        height,
+                    );
+                    if duration > Duration::from_nanos(16666670) {
+                        canvas.set_source_rgb(237.0 / 255.0, 51.0 / 255.0, 59.0 / 255.0);
+                    } else {
+                        canvas.set_source_rgb(98.0 / 255.0, 160.0 / 255.0, 234.0 / 255.0);
                     }
+                    canvas.fill();
                 }
             });
         }
@@ -79,7 +81,7 @@ impl Frame {
         Object::new(&[]).unwrap()
     }
 
-    pub fn set_data(&self, data: Option<TaskObject>) {
+    pub fn set_data(&self, data: TaskObject) {
         *inner::Frame::from_instance(self).data.borrow_mut() = data;
     }
 }

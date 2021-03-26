@@ -29,11 +29,7 @@ impl FrameTimeline {
                 .unwrap()
                 .downcast::<TaskObject>()
                 .unwrap();
-            frame.set_data(Some(frame_data));
-        });
-        factory.connect_unbind(|_, list_item| {
-            let frame = list_item.get_child().unwrap().downcast::<Frame>().unwrap();
-            frame.set_data(None);
+            frame.set_data(frame_data);
         });
         factory.connect_teardown(|_, list_item| {
             list_item.set_child(NONE_WIDGET);

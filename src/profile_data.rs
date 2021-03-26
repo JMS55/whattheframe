@@ -46,7 +46,7 @@ mod inner {
         fn new() -> Self {
             Self(RefCell::new(TaskData {
                 name: String::new(),
-                duration: Duration::from_secs(0),
+                duration: Duration::default(),
                 subtasks: Box::new([]),
             }))
         }

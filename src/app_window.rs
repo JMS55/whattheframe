@@ -11,12 +11,6 @@ pub struct AppWindow {}
 
 impl AppWindow {
     pub fn new(application: &Application) {
-        let views = Views::new();
-        views.widget().set_margin_top(18);
-        views.widget().set_margin_bottom(18);
-        views.widget().set_margin_start(18);
-        views.widget().set_margin_end(18);
-
         let load_profile_error_label = Label::new(Some("Failed to Load Profile"));
         let load_profile_error_bar = InfoBar::new();
         load_profile_error_bar.add_child(&load_profile_error_label);
@@ -24,6 +18,8 @@ impl AppWindow {
         load_profile_error_bar.set_show_close_button(true);
         load_profile_error_bar.connect_response(|bar, _| bar.hide());
         load_profile_error_bar.hide();
+
+        let views = Views::new();
 
         let content_area = GtkBox::new(gtk4::Orientation::Vertical, 0);
         content_area.append(&load_profile_error_bar);

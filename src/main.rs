@@ -32,5 +32,6 @@ fn main() {
 
         AppWindow::new(app);
     });
+    application.connect_open(|_, _, _| {}); // TODO
     application.run(&env::args().collect::<Vec<_>>());
 }

@@ -38,8 +38,8 @@ impl Views {
         let status_page = StatusPage::new();
         status_page.set_icon_name(Some("profile-symbolic"));
         status_page.set_title(Some("Open a Profile"));
-        let description_label = Label::new(Some("Press the Open profile button or press"));
-        let description_shortcut = ShortcutLabel::new("<ctl>O");
+        let description_label = Label::new(Some("Press the Open Profile button or press"));
+        let description_shortcut = ShortcutLabel::new("<Control>O");
         let description_box = GtkBox::new(gtk4::Orientation::Horizontal, 6);
         description_box.set_halign(Align::Center);
         description_box.append(&description_label);

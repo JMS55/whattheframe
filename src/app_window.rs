@@ -1,9 +1,9 @@
 use crate::views::Views;
 use gtk4::prelude::ApplicationExt;
 use gtk4::{
-    Application, Box as GtkBox, BoxExt, Button, ButtonExt, FileChooserAction, FileChooserExt,
-    FileChooserNative, FileFilter, GtkWindowExt, InfoBar, Label, MessageType, NativeDialogExt,
-    ResponseType, WidgetExt,
+    Application, Box as GtkBox, BoxExt, Button, ButtonExt, CallbackAction, FileChooserAction,
+    FileChooserExt, FileChooserNative, FileFilter, GtkWindowExt, InfoBar, Label, MessageType,
+    NativeDialogExt, ResponseType, Shortcut, ShortcutController, ShortcutTrigger, WidgetExt,
 };
 use libadwaita::{ApplicationWindow, ApplicationWindowExt, HeaderBar, ViewSwitcher};
 
@@ -37,9 +37,12 @@ impl AppWindow {
         window_content.append(&header_bar);
         window_content.append(&content_area);
 
+        let shortcut_controller = ShortcutController::new();
+
         let window = ApplicationWindow::new(application);
         window.set_default_size(830, 560);
         ApplicationWindowExt::set_child(&window, Some(&window_content));
+        window.add_controller(&shortcut_controller);
 
         let file_chooser = FileChooserNative::new(
             Some("Open Profile"),
@@ -62,6 +65,18 @@ impl AppWindow {
             let file_chooser = file_chooser.clone();
             move |_| file_chooser.show()
         });
+
+        let open_profile_shorcut = Shortcut::new(
+            Some(&ShortcutTrigger::parse_string("<Control>O").unwrap()),
+            Some(&CallbackAction::new(Some(Box::new({
+                let file_chooser = file_chooser.clone();
+                move |_, _| {
+                    file_chooser.show();
+                    true
+                }
+            })))),
+        );
+        shortcut_controller.add_shortcut(&open_profile_shorcut);
 
         file_chooser.connect_response(move |file_chooser, response| {
             if response == ResponseType::Accept {

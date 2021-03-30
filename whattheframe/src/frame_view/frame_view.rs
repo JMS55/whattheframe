@@ -1,6 +1,6 @@
 use crate::frame_view::FrameTimeline;
 use crate::frame_view::TaskTree;
-use crate::profile_data::TaskObject;
+use crate::task_data::TaskObject;
 use gtk4::{Box as GtkBox, BoxExt, Orientation, WidgetExt};
 use std::rc::Rc;
 

@@ -1,0 +1,11 @@
+listview.frame-timeline row {
+    padding: 0;
+}
+
+listview.frame-timeline row:selected {
+    background-color: transparent;
+}
+
+listview.frame-timeline row:focus {
+    background-color: transparent;
+}

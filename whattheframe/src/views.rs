@@ -1,11 +1,14 @@
 use crate::frame_view::FrameView;
-use crate::profile_data::{ProfileData, TaskData, TaskObject};
+use crate::task_data::{profile_data_from_file, TaskObject};
 use crate::task_view::TaskView;
 use gtk4::gio::File;
-use gtk4::{Align, Box as GtkBox, BoxExt, Label, ShortcutLabel, Stack, WidgetExt};
+use gtk4::{
+    Align, Box as GtkBox, BoxExt, Label, ShortcutLabel, Stack, StackTransitionType, WidgetExt,
+};
 use libadwaita::StatusPage;
 use std::error::Error;
 use std::time::Duration;
+use wtf::TaskData;
 
 pub struct Views {
     widget: Stack,
@@ -30,6 +33,7 @@ impl Views {
             .get_page(task_view.widget())
             .unwrap()
             .set_icon_name("task-view-symbolic");
+        views.set_transition_type(StackTransitionType::Crossfade);
         views.set_margin_top(18);
         views.set_margin_bottom(18);
         views.set_margin_start(18);
@@ -49,6 +53,7 @@ impl Views {
         let widget = Stack::new();
         widget.add_child(&status_page);
         widget.add_named(&views, Some("views"));
+        widget.set_transition_type(StackTransitionType::Crossfade);
 
         Self {
             widget,
@@ -59,8 +64,7 @@ impl Views {
     }
 
     pub fn load_profile(&self, file: File) -> Result<&Stack, Box<dyn Error>> {
-        let tasks = ProfileData::from_file(file)?
-            .frames
+        let tasks = profile_data_from_file(file)?
             .into_iter()
             .enumerate()
             .map(|(i, frame)| {

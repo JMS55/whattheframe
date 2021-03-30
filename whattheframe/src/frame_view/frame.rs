@@ -1,4 +1,4 @@
-use crate::profile_data::{TaskData, TaskObject};
+use crate::task_data::TaskObject;
 use gtk4::cairo::Context;
 use gtk4::glib::{self, Object};
 use gtk4::subclass::prelude::{
@@ -8,6 +8,7 @@ use gtk4::{DrawingArea, DrawingAreaExt, Widget};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
+use wtf::TaskData;
 
 pub const FRAME_WIDTH: i32 = 12;
 pub const FRAME_HEIGHT: i32 = 140;

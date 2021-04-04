@@ -1,22 +1,29 @@
-use flume::Sender;
-use once_cell::sync::Lazy;
-use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use snap::read::FrameDecoder;
-use snap::write::FrameEncoder;
-use std::fs::File;
-use std::io::{self, Read, Write};
-use std::mem;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::thread::{self, JoinHandle};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::io::{self, Read};
+use std::time::Duration;
 
-pub struct Profiler {
-    sender: Sender<ProfilerMessage>,
-    thread: JoinHandle<()>,
+#[cfg(profile)]
+mod profile_imports {
+    use flume::Sender;
+    use once_cell::sync::Lazy;
+    use parking_lot::RwLock;
+    use serde::Serialize;
+    use snap::write::FrameEncoder;
+    use std::fs::File;
+    use std::io::Write;
+    use std::mem;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::thread::{self, JoinHandle};
+    use std::time::{Instant, SystemTime, UNIX_EPOCH};
 }
+#[cfg(profile)]
+use profile_imports::*;
 
+#[cfg(profile)]
 static FRAME_NUMBER: AtomicU64 = AtomicU64::new(0);
+
+#[cfg(profile)]
 static PROFILER: Lazy<RwLock<Option<Profiler>>> = Lazy::new(|| {
     let (sender, reciever) = flume::unbounded();
 
@@ -87,18 +94,26 @@ static PROFILER: Lazy<RwLock<Option<Profiler>>> = Lazy::new(|| {
     RwLock::new(Some(Profiler { sender, thread }))
 });
 
+pub struct Profiler {
+    #[cfg(profile)]
+    sender: Sender<ProfilerMessage>,
+    #[cfg(profile)]
+    thread: JoinHandle<()>,
+}
+
+#[cfg(profile)]
 impl Profiler {
     /// This function should not be called after [`Profiler::end_profiling`].
-    pub fn new_frame() -> TaskRecording {
-        TaskRecording {
+    pub fn new_frame() -> TaskRecord {
+        TaskRecord {
             start: Instant::now(),
         }
     }
 
     /// This function should not be called after [`Profiler::end_profiling`].
-    pub fn profile_task(name: &'static str) -> TaskRecording {
+    pub fn profile_task(name: &'static str) -> TaskRecord {
         Profiler::send_message(ProfilerMessage::TaskStart { name });
-        TaskRecording {
+        TaskRecord {
             start: Instant::now(),
         }
     }
@@ -127,6 +142,19 @@ impl Profiler {
     }
 }
 
+#[cfg(not(profile))]
+impl Profiler {
+    pub fn new_frame() -> TaskRecordPlaceholder {
+        TaskRecordPlaceholder {}
+    }
+
+    pub fn profile_task(_: &'static str) -> TaskRecordPlaceholder {
+        TaskRecordPlaceholder {}
+    }
+
+    pub fn end_profiling() {}
+}
+
 pub type ProfileData = Box<[TaskData]>;
 
 pub fn read_profile_data<R: Read>(reader: R) -> Result<ProfileData, bincode::Error> {
@@ -134,14 +162,10 @@ pub fn read_profile_data<R: Read>(reader: R) -> Result<ProfileData, bincode::Err
     let mut frames = Vec::new();
     loop {
         let frame = bincode::deserialize_from(&mut reader);
-        let frame = match frame {
+        let frame = match frame.map_err(|err| *err) {
             Ok(task) => task,
-            Err(err) => match *err {
-                bincode::ErrorKind::Io(err) if err.kind() == io::ErrorKind::UnexpectedEof => {
-                    break;
-                }
-                _ => return Err(err),
-            },
+            Err(bincode::ErrorKind::Io(err)) if err.kind() == io::ErrorKind::UnexpectedEof => break,
+            Err(err) => return Err(Box::new(err)),
         };
         frames.push(frame);
     }
@@ -155,19 +179,27 @@ pub struct TaskData {
     pub subtasks: Box<[Self]>,
 }
 
+#[cfg(profile)]
 enum ProfilerMessage {
     TaskStart { name: &'static str },
     TaskEnd { elapsed: Duration },
 }
 
-pub struct TaskRecording {
+#[must_use = "Must assign to a variable: \"_record = new_frame()/profile_task()\""]
+#[cfg(profile)]
+pub struct TaskRecord {
     start: Instant,
 }
 
-impl Drop for TaskRecording {
+#[cfg(profile)]
+impl Drop for TaskRecord {
     fn drop(&mut self) {
         Profiler::send_message(ProfilerMessage::TaskEnd {
             elapsed: self.start.elapsed(),
         });
     }
 }
+
+#[must_use = "Must assign to a variable: \"_record = new_frame()/profile_task()\""]
+#[cfg(not(profile))]
+pub struct TaskRecordPlaceholder {}

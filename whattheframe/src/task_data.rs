@@ -4,7 +4,7 @@ use gtk4::subclass::prelude::{ObjectImpl, ObjectSubclass, ObjectSubclassExt};
 use std::cell::{Ref, RefCell};
 use std::error::Error;
 use std::time::Duration;
-use wtf::{FrameData, TaskData};
+use wtf::{ProfileData, TaskData};
 
 mod inner {
     use super::*;
@@ -19,7 +19,7 @@ mod inner {
 
         fn new() -> Self {
             Self(RefCell::new(TaskData {
-                name: String::new(),
+                name: Box::from(""),
                 duration: Duration::default(),
                 subtasks: Box::new([]),
             }))
@@ -45,7 +45,7 @@ impl TaskObject {
     }
 }
 
-pub fn profile_data_from_file(file: File) -> Result<Box<[FrameData]>, Box<dyn Error>> {
+pub fn profile_data_from_file(file: File) -> Result<ProfileData, Box<dyn Error>> {
     let (bytes, _) = file.load_contents(NONE_CANCELLABLE)?;
     wtf::profile_data_from_bytes(&bytes)
 }

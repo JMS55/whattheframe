@@ -8,7 +8,6 @@ use gtk4::{
 use libadwaita::StatusPage;
 use std::error::Error;
 use std::time::Duration;
-use wtf::TaskData;
 
 pub struct Views {
     widget: Stack,
@@ -65,15 +64,9 @@ impl Views {
 
     pub fn load_profile(&self, file: File) -> Result<&Stack, Box<dyn Error>> {
         let tasks = profile_data_from_file(file)?
+            .to_vec()
             .into_iter()
-            .enumerate()
-            .map(|(i, frame)| {
-                TaskObject::new(TaskData {
-                    name: format!("Frame #{}", i + 1),
-                    duration: frame.duration,
-                    subtasks: frame.tasks.clone(),
-                })
-            })
+            .map(TaskObject::new)
             .collect::<Vec<TaskObject>>();
         let above_threshold_count = tasks
             .iter()

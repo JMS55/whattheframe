@@ -29,7 +29,7 @@ mod inner {
         fn new() -> Self {
             Self {
                 data: Rc::new(RefCell::new(TaskObject::new(TaskData {
-                    name: String::new(),
+                    name: Box::from(""),
                     duration: Duration::default(),
                     subtasks: Box::new([]),
                 }))),

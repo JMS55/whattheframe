@@ -1,5 +1,5 @@
 use crate::frame_view::{Frame, FrameThreshold, FRAME_HEIGHT};
-use crate::task_data::TaskObject;
+use crate::task_object::TaskObject;
 use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
 use gtk4::prelude::Cast;

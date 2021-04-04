@@ -1,4 +1,4 @@
-use crate::task_data::TaskObject;
+use crate::task_object::TaskObject;
 use gtk4::Button;
 
 pub struct TaskView {

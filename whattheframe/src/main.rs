@@ -1,6 +1,6 @@
 mod app_window;
 mod frame_view;
-mod task_data;
+mod task_object;
 mod task_view;
 mod views;
 

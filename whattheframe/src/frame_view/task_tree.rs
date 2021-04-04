@@ -1,4 +1,4 @@
-use crate::task_data::TaskObject;
+use crate::task_object::TaskObject;
 use gtk4::gio::{ListModel, ListStore};
 use gtk4::glib::Type;
 use gtk4::prelude::Cast;

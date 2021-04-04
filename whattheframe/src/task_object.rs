@@ -1,10 +1,8 @@
-use gtk4::gio::{File, FileExt, NONE_CANCELLABLE};
 use gtk4::glib::{self, Object};
 use gtk4::subclass::prelude::{ObjectImpl, ObjectSubclass, ObjectSubclassExt};
 use std::cell::{Ref, RefCell};
-use std::error::Error;
 use std::time::Duration;
-use wtf::{ProfileData, TaskData};
+use wtf::TaskData;
 
 mod inner {
     use super::*;
@@ -43,9 +41,4 @@ impl TaskObject {
     pub fn get(&self) -> Ref<TaskData> {
         inner::TaskObject::from_instance(self).0.borrow()
     }
-}
-
-pub fn profile_data_from_file(file: File) -> Result<ProfileData, Box<dyn Error>> {
-    let (bytes, _) = file.load_contents(NONE_CANCELLABLE)?;
-    wtf::profile_data_from_bytes(&bytes)
 }

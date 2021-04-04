@@ -1,13 +1,16 @@
 use crate::frame_view::FrameView;
-use crate::task_data::{profile_data_from_file, TaskObject};
+use crate::task_object::TaskObject;
 use crate::task_view::TaskView;
-use gtk4::gio::File;
+use gtk4::gio::prelude::InputStreamExtManual;
+use gtk4::gio::{File, FileExt, NONE_CANCELLABLE};
 use gtk4::{
     Align, Box as GtkBox, BoxExt, Label, ShortcutLabel, Stack, StackTransitionType, WidgetExt,
 };
 use libadwaita::StatusPage;
 use std::error::Error;
+use std::io::BufReader;
 use std::time::Duration;
+use wtf::read_profile_data;
 
 pub struct Views {
     widget: Stack,
@@ -63,7 +66,9 @@ impl Views {
     }
 
     pub fn load_profile(&self, file: File) -> Result<&Stack, Box<dyn Error>> {
-        let tasks = profile_data_from_file(file)?
+        let file = file.read(NONE_CANCELLABLE)?.into_read();
+        let file = BufReader::new(file);
+        let tasks = read_profile_data(file)?
             .to_vec()
             .into_iter()
             .map(TaskObject::new)

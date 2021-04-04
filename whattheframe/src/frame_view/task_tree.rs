@@ -90,6 +90,7 @@ impl TaskTree {
                     }
                     Some(model.upcast::<ListModel>())
                 });
+                model.get_row(0).unwrap().set_expanded(true);
                 let model = NoSelection::new(Some(&model));
                 self.list_view.set_model(Some(&model));
             }

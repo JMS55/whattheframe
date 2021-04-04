@@ -3,27 +3,27 @@ use snap::read::FrameDecoder;
 use std::io::{self, Read};
 use std::time::Duration;
 
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 mod profile_imports {
-    use flume::Sender;
-    use once_cell::sync::Lazy;
-    use parking_lot::RwLock;
-    use serde::Serialize;
-    use snap::write::FrameEncoder;
-    use std::fs::File;
-    use std::io::Write;
-    use std::mem;
-    use std::sync::atomic::{AtomicU64, Ordering};
-    use std::thread::{self, JoinHandle};
-    use std::time::{Instant, SystemTime, UNIX_EPOCH};
+    pub use flume::Sender;
+    pub use once_cell::sync::Lazy;
+    pub use parking_lot::RwLock;
+    pub use serde::Serialize;
+    pub use snap::write::FrameEncoder;
+    pub use std::fs::File;
+    pub use std::io::Write;
+    pub use std::mem;
+    pub use std::sync::atomic::{AtomicU64, Ordering};
+    pub use std::thread::{self, JoinHandle};
+    pub use std::time::{Instant, SystemTime, UNIX_EPOCH};
 }
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 use profile_imports::*;
 
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 static FRAME_NUMBER: AtomicU64 = AtomicU64::new(0);
 
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 static PROFILER: Lazy<RwLock<Option<Profiler>>> = Lazy::new(|| {
     let (sender, reciever) = flume::unbounded();
 
@@ -95,13 +95,13 @@ static PROFILER: Lazy<RwLock<Option<Profiler>>> = Lazy::new(|| {
 });
 
 pub struct Profiler {
-    #[cfg(profile)]
+    #[cfg(feature = "profile")]
     sender: Sender<ProfilerMessage>,
-    #[cfg(profile)]
+    #[cfg(feature = "profile")]
     thread: JoinHandle<()>,
 }
 
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 impl Profiler {
     /// This function should not be called after [`Profiler::end_profiling`].
     pub fn new_frame() -> TaskRecord {
@@ -142,7 +142,7 @@ impl Profiler {
     }
 }
 
-#[cfg(not(profile))]
+#[cfg(not(feature = "profile"))]
 impl Profiler {
     pub fn new_frame() -> TaskRecordPlaceholder {
         TaskRecordPlaceholder {}
@@ -179,19 +179,19 @@ pub struct TaskData {
     pub subtasks: Box<[Self]>,
 }
 
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 enum ProfilerMessage {
     TaskStart { name: &'static str },
     TaskEnd { elapsed: Duration },
 }
 
 #[must_use = "Must assign to a variable: \"_record = new_frame()/profile_task()\""]
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 pub struct TaskRecord {
     start: Instant,
 }
 
-#[cfg(profile)]
+#[cfg(feature = "profile")]
 impl Drop for TaskRecord {
     fn drop(&mut self) {
         Profiler::send_message(ProfilerMessage::TaskEnd {
@@ -201,5 +201,5 @@ impl Drop for TaskRecord {
 }
 
 #[must_use = "Must assign to a variable: \"_record = new_frame()/profile_task()\""]
-#[cfg(not(profile))]
+#[cfg(not(feature = "profile"))]
 pub struct TaskRecordPlaceholder {}

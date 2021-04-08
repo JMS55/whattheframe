@@ -317,11 +317,12 @@ pub struct TaskRecord {
 #[cfg(feature = "profile")]
 impl Drop for TaskRecord {
     fn drop(&mut self) {
+        let msg = ProfilerMessage::TaskEnd {
+            elapsed: self.start.elapsed(),
+        };
         PROFILER
             .sender
-            .send(ProfilerMessage::TaskEnd {
-                elapsed: self.start.elapsed(),
-            })
+            .send(msg)
             .expect("WTF: Failed to send task across a thread");
     }
 }

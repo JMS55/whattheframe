@@ -2,6 +2,15 @@
 name = "wtf"
 version = "0.1.0"
 edition = "2018"
+authors = ["JMS55"]
+license = "MIT"
+description = "A frame-based profiling crate."
+homepage = "https://github.com/JMS55/whattheframe/tree/master/wtf"
+repository = "https://github.com/JMS55/whattheframe/tree/master/wtf"
+documentation = "https://docs.rs/wtf"
+readme = "README.md"
+keywords = ["profiling", "optimization", "performance", "gamedev"]
+categories = ["development-tools::profiling", "game-development"]
 
 [features]
 profile = ["chrono", "flume", "once_cell"]

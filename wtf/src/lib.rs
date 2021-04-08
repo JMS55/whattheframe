@@ -4,155 +4,149 @@ use std::io::{self, Read};
 use std::time::Duration;
 
 #[cfg(feature = "profile")]
-mod profile_imports {
-    pub use flume::Sender;
-    pub use once_cell::sync::Lazy;
-    pub use parking_lot::RwLock;
-    pub use serde::Serialize;
-    pub use snap::write::FrameEncoder;
-    pub use std::fs::File;
-    pub use std::io::Write;
-    pub use std::mem;
-    pub use std::sync::atomic::{AtomicU64, Ordering};
-    pub use std::thread::{self, JoinHandle};
-    pub use std::time::{Instant, SystemTime, UNIX_EPOCH};
-}
-#[cfg(feature = "profile")]
-use profile_imports::*;
+use {
+    chrono::offset::Utc,
+    flume::Sender,
+    once_cell::sync::Lazy,
+    serde::Serialize,
+    snap::write::FrameEncoder,
+    std::env,
+    std::fs::File,
+    std::io::Write,
+    std::mem,
+    std::sync::RwLock,
+    std::thread::{self, JoinHandle},
+    std::time::Instant,
+};
 
 #[cfg(feature = "profile")]
-static FRAME_NUMBER: AtomicU64 = AtomicU64::new(0);
-
-#[cfg(feature = "profile")]
-static PROFILER: Lazy<RwLock<Option<Profiler>>> = Lazy::new(|| {
+static PROFILER: Lazy<Profiler> = Lazy::new(|| {
     let (sender, reciever) = flume::unbounded();
 
-    let thread = thread::spawn(move || {
-        let file_name = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let file = File::create(format!("{}.wtf", file_name))
-            .expect("Error: Failed to create wtf::Profiler file");
-        let mut file = FrameEncoder::new(file);
+    let thread = thread::Builder::new()
+        .name("wtf-profiler".to_string())
+        .spawn(move || {
+            let program_name = env::current_exe().unwrap();
+            let program_name = program_name.file_name().unwrap().to_str().unwrap();
+            let timestamp = Utc::now().format("%F-%T");
+            let file = File::create(format!("{}-{}.wtf", program_name, timestamp)).unwrap();
+            let mut file = FrameEncoder::new(file);
 
-        #[derive(Serialize)]
-        struct TaskDataS<'a> {
-            pub name: &'a str,
-            pub duration: Duration,
-            pub subtasks: Vec<Self>,
-        }
+            #[derive(Serialize)]
+            struct TaskDataS<'a> {
+                name: &'a str,
+                duration: Duration,
+                subtasks: Vec<Self>,
+            }
 
-        let mut frame = TaskDataS {
-            name: "",
-            duration: Duration::default(),
-            subtasks: Vec::new(),
-        };
-        let mut parent_stack: Vec<*mut TaskDataS> = vec![&mut frame];
+            let mut frame_number = 0;
+            let mut frame = TaskDataS {
+                name: "",
+                duration: Duration::default(),
+                subtasks: Vec::new(),
+            };
+            let mut parent_stack: Vec<*mut TaskDataS> = vec![&mut frame];
 
-        for msg in reciever.iter() {
-            match msg {
-                ProfilerMessage::TaskStart { name } => {
-                    let task = TaskDataS {
-                        name,
-                        duration: Duration::default(),
-                        subtasks: Vec::new(),
-                    };
+            loop {
+                let msg = reciever.recv_timeout(Duration::from_millis(100));
+                match msg {
+                    Ok(ProfilerMessage::TaskStart { name }) => {
+                        let task = TaskDataS {
+                            name,
+                            duration: Duration::default(),
+                            subtasks: Vec::new(),
+                        };
 
-                    let parent = *parent_stack.last().unwrap();
-                    let parent_subtasks = unsafe { &mut (*parent).subtasks };
+                        let parent = *parent_stack.last().unwrap();
+                        let parent_subtasks = unsafe { &mut (*parent).subtasks };
 
-                    parent_subtasks.push(task);
-                    let task_ref = parent_subtasks.last_mut().unwrap();
-                    parent_stack.push(task_ref);
-                }
-                ProfilerMessage::TaskEnd { elapsed } => {
-                    let task = *parent_stack.last().unwrap();
-                    unsafe { (*task).duration = elapsed }
+                        parent_subtasks.push(task);
+                        let task_ref = parent_subtasks.last_mut().unwrap();
+                        parent_stack.push(task_ref);
+                    }
+                    Ok(ProfilerMessage::TaskEnd { elapsed }) => {
+                        let task = *parent_stack.last().unwrap();
+                        unsafe { (*task).duration = elapsed }
 
-                    if parent_stack.len() == 1 {
-                        let frame_number = FRAME_NUMBER.fetch_add(1, Ordering::SeqCst) + 1;
-                        let frame_name = format!("Frame: #{}", frame_number);
+                        if parent_stack.len() == 1 {
+                            frame_number += 1;
+                            let frame_name = format!("Frame: #{}", frame_number);
 
-                        // SAFETY: frame.name is temporarily set to reference a local string.
-                        // It must be reset to a valid reference by the end of the scope.
-                        frame.name = unsafe { mem::transmute(frame_name.as_str()) };
-                        bincode::serialize_into(&mut file, &frame).unwrap();
-                        frame.name = "";
+                            // SAFETY: frame.name is temporarily set to reference a local string.
+                            // It must be reset to a valid reference by the end of the scope.
+                            frame.name = unsafe { mem::transmute(frame_name.as_str()) };
+                            bincode::serialize_into(&mut file, &frame).unwrap();
+                            frame.name = "";
 
-                        frame.subtasks.clear();
-                    } else {
-                        parent_stack.pop().unwrap();
+                            frame.subtasks.clear();
+                        } else {
+                            parent_stack.pop().unwrap();
+                        }
+                    }
+                    _ => {
+                        if PROFILER.thread.read().unwrap().is_none() {
+                            break;
+                        }
                     }
                 }
             }
-        }
 
-        file.flush().unwrap();
-    });
+            file.flush().unwrap();
+        })
+        .unwrap();
+    let thread = RwLock::new(Some(thread));
 
-    RwLock::new(Some(Profiler { sender, thread }))
+    Profiler { sender, thread }
 });
 
 pub struct Profiler {
     #[cfg(feature = "profile")]
     sender: Sender<ProfilerMessage>,
     #[cfg(feature = "profile")]
-    thread: JoinHandle<()>,
+    thread: RwLock<Option<JoinHandle<()>>>,
 }
 
 #[cfg(feature = "profile")]
-impl Profiler {
-    /// This function should not be called after [`Profiler::end_profiling`].
-    pub fn new_frame() -> TaskRecord {
-        TaskRecord {
-            start: Instant::now(),
-        }
-    }
-
-    /// This function should not be called after [`Profiler::end_profiling`].
-    pub fn profile_task(name: &'static str) -> TaskRecord {
-        Profiler::send_message(ProfilerMessage::TaskStart { name });
-        TaskRecord {
-            start: Instant::now(),
-        }
-    }
-
-    /// This function should be called a single time at the end of your game, once all other threads in your game finish.
-    pub fn end_profiling() {
-        let Profiler { sender, thread } = PROFILER
-            .write()
-            .take()
-            .expect("Error: wtf::Profiler::end_profiling() already called");
-        drop(sender);
-        thread
-            .join()
-            .expect("Error: wtf::Profiler::end_profiling() failed to join thread");
-    }
-
-    fn send_message(msg: ProfilerMessage) {
-        let profiler_lock = PROFILER.read();
-        let sender = profiler_lock
-            .as_ref()
-            .expect("Error: wtf::Profiler::end_profiling() was called")
-            .sender
-            .clone();
-        drop(profiler_lock);
-        sender.send(msg).unwrap();
-    }
-}
-
+pub type ProfilingReturnType = TaskRecord;
 #[cfg(not(feature = "profile"))]
+pub type ProfilingReturnType = ();
+
 impl Profiler {
-    pub fn new_frame() -> TaskRecordPlaceholder {
-        TaskRecordPlaceholder {}
+    /// This function should not be called after [`Profiler::end_profiling`].
+    #[must_use = "Must assign to a variable: \"_record = new_frame()\""]
+    pub fn new_frame() -> ProfilingReturnType {
+        #[cfg(feature = "profile")]
+        TaskRecord {
+            start: Instant::now(),
+        }
     }
 
-    pub fn profile_task(_: &'static str) -> TaskRecordPlaceholder {
-        TaskRecordPlaceholder {}
+    /// This function should not be called after [`Profiler::end_profiling`].
+    #[must_use = "Must assign to a variable: \"_record = profile_task()\""]
+    #[allow(unused_variables)]
+    pub fn profile_task(name: &'static str) -> ProfilingReturnType {
+        #[cfg(feature = "profile")]
+        {
+            PROFILER
+                .sender
+                .send(ProfilerMessage::TaskStart { name })
+                .unwrap();
+            TaskRecord {
+                start: Instant::now(),
+            }
+        }
     }
 
-    pub fn end_profiling() {}
+    // This function should be called a single time at the end of your game, once all other threads in your game finish.
+    pub fn end_profiling() {
+        #[cfg(feature = "profile")]
+        {
+            let mut profiler_lock = PROFILER.thread.write().unwrap();
+            let thread = profiler_lock.take().unwrap();
+            drop(profiler_lock);
+            thread.join().unwrap();
+        }
+    }
 }
 
 pub type ProfileData = Box<[TaskData]>;
@@ -185,7 +179,6 @@ enum ProfilerMessage {
     TaskEnd { elapsed: Duration },
 }
 
-#[must_use = "Must assign to a variable: \"_record = new_frame()/profile_task()\""]
 #[cfg(feature = "profile")]
 pub struct TaskRecord {
     start: Instant,
@@ -194,12 +187,11 @@ pub struct TaskRecord {
 #[cfg(feature = "profile")]
 impl Drop for TaskRecord {
     fn drop(&mut self) {
-        Profiler::send_message(ProfilerMessage::TaskEnd {
-            elapsed: self.start.elapsed(),
-        });
+        PROFILER
+            .sender
+            .send(ProfilerMessage::TaskEnd {
+                elapsed: self.start.elapsed(),
+            })
+            .unwrap();
     }
 }
-
-#[must_use = "Must assign to a variable: \"_record = new_frame()/profile_task()\""]
-#[cfg(not(feature = "profile"))]
-pub struct TaskRecordPlaceholder {}

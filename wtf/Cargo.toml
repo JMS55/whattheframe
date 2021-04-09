@@ -8,7 +8,7 @@ description = "A frame-based profiling crate."
 homepage = "https://github.com/JMS55/whattheframe/tree/master/wtf"
 repository = "https://github.com/JMS55/whattheframe/tree/master/wtf"
 documentation = "https://docs.rs/wtf"
-readme = "README.md"
+readme = "../README.md"
 keywords = ["profiling", "optimization", "performance", "gamedev"]
 categories = ["development-tools::profiling", "game-development"]
 

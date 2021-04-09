@@ -30,10 +30,10 @@
 //!
 //! Note that you _must_ assign [`Profiler::new_frame`] and [`Profiler::profile_task`] to a variable (_not_ `_`) like so:
 //! ```rust
-//! let _record = Profiler::new_frame();
+//! let _profile = Profiler::new_frame();
 //! ```
 //! ```rust
-//! let _record = Profiler::new_task("foo");
+//! let _profile = Profiler::new_task("foo");
 //! ```
 //!
 //! Example with `winit`:
@@ -54,14 +54,14 @@
 //!         move || {
 //!             while !thread_should_quit.load(Ordering::SeqCst) {
 //!                 {
-//!                     let _record = Profiler::profile_task("thread_part_1");
+//!                     let _profile = Profiler::profile_task("thread_part_1");
 //!                     thread_task_1();
 //!                     thread_task_2();
 //!                     thread_task_3();
 //!                 }
 //!
 //!                 {
-//!                     let _record = Profiler::profile_task("thread_part_2");
+//!                     let _profile = Profiler::profile_task("thread_part_2");
 //!                     thread_task_4();
 //!                     thread_task_5();
 //!                 }
@@ -182,7 +182,7 @@ static PROFILER: Lazy<Profiler> = Lazy::new(|| {
                         // Else pop the parent stack
                         if parent_stack.len() == 1 {
                             frame_number += 1;
-                            let frame_name = format!("Frame: #{}", frame_number);
+                            let frame_name = format!("Frame #{}", frame_number);
                             // SAFETY: frame.name is temporarily set to reference a local string
                             // It must be reset to a valid reference by the end of the scope
                             frame.name = unsafe { mem::transmute(frame_name.as_str()) };
@@ -234,7 +234,7 @@ pub type ProfilingReturnType = TaskRecord;
 pub type ProfilingReturnType = ();
 
 impl Profiler {
-    #[must_use = "Must assign to a variable: \"_record = Profiler::new_frame()\""]
+    #[must_use = "Must assign to a variable: \"_profile = Profiler::new_frame()\""]
     pub fn new_frame() -> ProfilingReturnType {
         #[cfg(feature = "profile")]
         TaskRecord {
@@ -242,7 +242,7 @@ impl Profiler {
         }
     }
 
-    #[must_use = "Must assign to a variable: \"_record = Profiler::profile_task()\""]
+    #[must_use = "Must assign to a variable: \"_profile = Profiler::profile_task()\""]
     #[allow(unused_variables)]
     pub fn profile_task(name: &'static str) -> ProfilingReturnType {
         #[cfg(feature = "profile")]
@@ -283,7 +283,7 @@ pub type ProfileData = Box<[TaskData]>;
 pub fn read_profile_data<R: Read>(reader: R) -> Result<ProfileData, bincode::Error> {
     let mut reader = FrameDecoder::new(reader);
     let mut frames = Vec::new();
-    // Keep trying to read TaskData's until that fails for non-IO related reasons
+    // Keep trying to read TaskData's until there aren't any more to read
     loop {
         let frame = bincode::deserialize_from(&mut reader);
         let frame = match frame.map_err(|err| *err) {

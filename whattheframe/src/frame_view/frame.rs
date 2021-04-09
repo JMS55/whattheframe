@@ -74,7 +74,7 @@ mod inner {
 }
 
 glib::wrapper! {
-    pub struct Frame(ObjectSubclass<inner::Frame>) @extends Widget, DrawingArea;
+    pub struct Frame(ObjectSubclass<inner::Frame>) @extends DrawingArea, Widget;
 }
 
 impl Frame {

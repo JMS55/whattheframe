@@ -53,6 +53,7 @@ impl FrameTimeline {
         frame_threshold.widget().set_margin_top(margin);
 
         let threshold_toggle = CheckButton::new();
+        threshold_toggle.set_halign(Align::Start);
         threshold_toggle.set_valign(Align::Start);
 
         let widget = Overlay::new();

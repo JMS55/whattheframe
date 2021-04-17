@@ -13,9 +13,10 @@ keywords = ["profiling", "optimization", "performance", "gamedev"]
 categories = ["development-tools::profiling", "game-development"]
 
 [features]
-profile = ["chrono", "flume", "once_cell"]
+profile = ["bumpalo", "chrono", "flume", "once_cell"]
 
 [dependencies]
+bumpalo = { version = "3.6", optional = true }
 chrono = { version = "0.4", optional = true }
 flume = { version = "0.10", optional = true }
 once_cell = { version = "1.7", optional = true }

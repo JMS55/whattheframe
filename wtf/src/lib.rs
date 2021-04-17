@@ -145,7 +145,7 @@ static PROFILER: Lazy<Profiler> = Lazy::new(|| {
                 subtasks: Vec<&'a Self>,
             }
 
-            let mut task_arena = Arena::with_capacity(1000);
+            let mut task_arena = Arena::with_capacity(mem::size_of::<TaskDataS>() * 1000);
             let mut frame_number: usize = 0;
             let mut frame = TaskDataS {
                 name: "",

@@ -23,37 +23,25 @@ impl TaskTree {
             list_item.set_child(Some(&row_expander));
         });
         factory.connect_bind(|_, list_item| {
-            let row = list_item
-                .get_item()
-                .unwrap()
-                .downcast::<TreeListRow>()
-                .unwrap();
+            let row = list_item.item().unwrap().downcast::<TreeListRow>().unwrap();
             let row_expander = list_item
-                .get_child()
+                .child()
                 .unwrap()
                 .downcast::<TreeExpander>()
                 .unwrap();
             row_expander.set_list_row(Some(&row));
 
-            let task = row.get_item().unwrap().downcast::<TaskObject>().unwrap();
-            let task_widget = row_expander
-                .get_child()
-                .unwrap()
-                .downcast::<Task>()
-                .unwrap();
+            let task = row.item().unwrap().downcast::<TaskObject>().unwrap();
+            let task_widget = row_expander.child().unwrap().downcast::<Task>().unwrap();
             task_widget.set_task(Some(&task));
         });
         factory.connect_unbind(|_, list_item| {
             let row_expander = list_item
-                .get_child()
+                .child()
                 .unwrap()
                 .downcast::<TreeExpander>()
                 .unwrap();
-            let task_widget = row_expander
-                .get_child()
-                .unwrap()
-                .downcast::<Task>()
-                .unwrap();
+            let task_widget = row_expander.child().unwrap().downcast::<Task>().unwrap();
             row_expander.set_list_row(None);
             task_widget.set_task(None);
         });
@@ -89,7 +77,7 @@ impl TaskTree {
                     }
                     Some(model.upcast::<ListModel>())
                 });
-                model.get_row(0).unwrap().set_expanded(true);
+                model.row(0).unwrap().set_expanded(true);
                 let model = NoSelection::new(Some(&model));
                 self.list_view.set_model(Some(&model));
             }

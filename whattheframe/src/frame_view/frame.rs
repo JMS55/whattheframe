@@ -1,10 +1,11 @@
 use crate::task_object::TaskObject;
 use gtk4::cairo::Context;
 use gtk4::glib::{self, Object};
+use gtk4::prelude::DrawingAreaExt;
 use gtk4::subclass::prelude::{
     DrawingAreaImpl, ObjectImpl, ObjectImplExt, ObjectSubclass, ObjectSubclassExt, WidgetImpl,
 };
-use gtk4::{DrawingArea, DrawingAreaExt, Widget};
+use gtk4::{DrawingArea, Widget};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Duration;
@@ -62,7 +63,7 @@ mod inner {
                     } else {
                         canvas.set_source_rgb(98.0 / 255.0, 160.0 / 255.0, 234.0 / 255.0);
                     }
-                    canvas.fill();
+                    canvas.fill().unwrap();
                 }
             });
         }

@@ -1,11 +1,13 @@
 use crate::views::Views;
-use gtk4::prelude::ApplicationExt;
-use gtk4::{
-    Application, Box as GtkBox, BoxExt, Button, ButtonExt, CallbackAction, FileChooserAction,
-    FileChooserExt, FileChooserNative, FileFilter, GtkWindowExt, InfoBar, Label, MessageType,
-    NativeDialogExt, ResponseType, Shortcut, ShortcutController, ShortcutTrigger, WidgetExt,
+use gtk4::prelude::{
+    ApplicationExt, BoxExt, ButtonExt, FileChooserExt, GtkWindowExt, NativeDialogExt, WidgetExt,
 };
-use libadwaita::{ApplicationWindow, ApplicationWindowExt, HeaderBar, ViewSwitcher};
+use gtk4::{
+    Application, Box as GtkBox, Button, CallbackAction, FileChooserAction, FileChooserNative,
+    FileFilter, InfoBar, Label, MessageType, ResponseType, Shortcut, ShortcutController,
+    ShortcutTrigger,
+};
+use libadwaita::{ApplicationWindow, HeaderBar, ViewSwitcher};
 
 pub struct AppWindow {}
 
@@ -41,7 +43,7 @@ impl AppWindow {
 
         let window = ApplicationWindow::new(application);
         window.set_default_size(830, 560);
-        ApplicationWindowExt::set_child(&window, Some(&window_content));
+        window.set_child(Some(&window_content));
         window.add_controller(&shortcut_controller);
 
         let file_chooser = FileChooserNative::new(
@@ -68,19 +70,19 @@ impl AppWindow {
 
         let open_profile_shorcut = Shortcut::new(
             Some(&ShortcutTrigger::parse_string("<Control>O").unwrap()),
-            Some(&CallbackAction::new(Some(Box::new({
+            Some(&CallbackAction::new({
                 let file_chooser = file_chooser.clone();
                 move |_, _| {
                     file_chooser.show();
                     true
                 }
-            })))),
+            })),
         );
         shortcut_controller.add_shortcut(&open_profile_shorcut);
 
         file_chooser.connect_response(move |file_chooser, response| {
             if response == ResponseType::Accept {
-                if let Some(profile) = file_chooser.get_file() {
+                if let Some(profile) = file_chooser.file() {
                     match views.load_profile(profile) {
                         Ok(views) => view_switcher.set_stack(Some(views)),
                         Err(_) => load_profile_error_bar.show(),

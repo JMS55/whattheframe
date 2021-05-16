@@ -1,11 +1,9 @@
 use crate::frame_view::FrameView;
 use crate::task_object::TaskObject;
 use crate::task_view::TaskView;
-use gtk4::gio::prelude::InputStreamExtManual;
-use gtk4::gio::{File, FileExt, NONE_CANCELLABLE};
-use gtk4::{
-    Align, Box as GtkBox, BoxExt, Label, ShortcutLabel, Stack, StackTransitionType, WidgetExt,
-};
+use gtk4::gio::{File, NONE_CANCELLABLE};
+use gtk4::prelude::{BoxExt, FileExt, InputStreamExtManual, WidgetExt};
+use gtk4::{Align, Box as GtkBox, Label, ShortcutLabel, Stack, StackTransitionType};
 use libadwaita::StatusPage;
 use std::error::Error;
 use std::io::BufReader;
@@ -28,11 +26,11 @@ impl Views {
         views.add_titled(frame_view.widget(), Some("frame_view"), "Frame View");
         views.add_titled(task_view.widget(), Some("task_view"), "Task View");
         views
-            .get_page(frame_view.widget())
+            .page(frame_view.widget())
             .unwrap()
             .set_icon_name("frame-view-symbolic");
         views
-            .get_page(task_view.widget())
+            .page(task_view.widget())
             .unwrap()
             .set_icon_name("task-view-symbolic");
         views.set_transition_type(StackTransitionType::Crossfade);

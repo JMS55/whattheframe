@@ -1,7 +1,8 @@
 use crate::frame_view::FrameTimeline;
 use crate::frame_view::TaskTree;
 use crate::task_object::TaskObject;
-use gtk4::{Box as GtkBox, BoxExt, Orientation, WidgetExt};
+use gtk4::prelude::{BoxExt, WidgetExt};
+use gtk4::{Box as GtkBox, Orientation};
 use std::rc::Rc;
 
 pub struct FrameView {

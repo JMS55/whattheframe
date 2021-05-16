@@ -1,12 +1,11 @@
 use crate::task_object::TaskObject;
 use gtk4::glib::{self, Object};
+use gtk4::prelude::{BoxExt, OrientableExt, WidgetExt};
 use gtk4::subclass::prelude::{
     BoxImpl, ObjectImpl, ObjectImplExt, ObjectSubclass, ObjectSubclassExt, OrientableImpl,
     WidgetImpl,
 };
-use gtk4::{
-    Box as GtkBox, BoxExt, Label, Orientable, OrientableExt, Orientation, Widget, WidgetExt,
-};
+use gtk4::{Box as GtkBox, Label, Orientable, Orientation, Widget};
 
 mod inner {
     use super::*;

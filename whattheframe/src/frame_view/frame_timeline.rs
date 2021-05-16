@@ -2,11 +2,11 @@ use crate::frame_view::{Frame, FrameThreshold, FRAME_HEIGHT};
 use crate::task_object::TaskObject;
 use gtk4::gio::ListStore;
 use gtk4::glib::types::Type;
-use gtk4::prelude::Cast;
+use gtk4::prelude::{Cast, CheckButtonExt, OrientableExt, SelectionModelExt, WidgetExt};
 use gtk4::{
-    Align, CheckButton, CheckButtonExt, CustomFilter, FilterListModel, ListView, OrientableExt,
-    Orientation, Overlay, ScrolledWindow, SelectionModelExt, SignalListItemFactory,
-    SingleSelection, WidgetExt, NONE_FILTER, NONE_SELECTION_MODEL, NONE_WIDGET,
+    Align, CheckButton, CustomFilter, FilterListModel, ListView, Orientation, Overlay,
+    ScrolledWindow, SignalListItemFactory, SingleSelection, NONE_FILTER, NONE_SELECTION_MODEL,
+    NONE_WIDGET,
 };
 use std::time::Duration;
 
@@ -23,12 +23,8 @@ impl FrameTimeline {
             list_item.set_child(Some(&Frame::new()));
         });
         factory.connect_bind(|_, list_item| {
-            let frame = list_item.get_child().unwrap().downcast::<Frame>().unwrap();
-            let frame_data = list_item
-                .get_item()
-                .unwrap()
-                .downcast::<TaskObject>()
-                .unwrap();
+            let frame = list_item.child().unwrap().downcast::<Frame>().unwrap();
+            let frame_data = list_item.item().unwrap().downcast::<TaskObject>().unwrap();
             frame.set_data(frame_data);
         });
         factory.connect_teardown(|_, list_item| {
@@ -89,7 +85,7 @@ impl FrameTimeline {
         self.threshold_toggle.connect_toggled({
             let model = model.clone();
             move |threshold_toggle| {
-                if threshold_toggle.get_active() {
+                if threshold_toggle.is_active() {
                     model.set_filter(Some(&CustomFilter::new(|item| {
                         item.downcast_ref::<TaskObject>().unwrap().get().duration
                             > Duration::from_nanos(16666670)
@@ -104,7 +100,7 @@ impl FrameTimeline {
         model.set_can_unselect(true);
         model.connect_selection_changed(move |model, _, _| {
             let task_data = model
-                .get_selected_item()
+                .selected_item()
                 .map(|d| d.downcast::<TaskObject>().unwrap());
             (on_frame_selection_change)(task_data);
         });

@@ -1,5 +1,6 @@
 use gtk4::cairo::{Context, LineCap};
-use gtk4::{Box as GtkBox, BoxExt, DrawingArea, DrawingAreaExt, Label, Orientation, WidgetExt};
+use gtk4::prelude::{BoxExt, DrawingAreaExt, WidgetExt};
+use gtk4::{Box as GtkBox, DrawingArea, Label, Orientation};
 
 pub struct FrameThreshold {
     widget: GtkBox,
@@ -20,7 +21,7 @@ impl FrameThreshold {
                 canvas.set_line_width(2.0);
                 canvas.set_dash(&[8.0], 0.0);
                 canvas.set_line_cap(LineCap::Round);
-                canvas.stroke();
+                canvas.stroke().unwrap();
             },
         );
         drawing_area.set_hexpand(true);

@@ -5,7 +5,7 @@ edition = "2018"
 
 [dependencies]
 gtk4 = { git = "https://github.com/gtk-rs/gtk4-rs" }
-libadwaita = { git = "https://gitlab.gnome.org/bilelmoussaoui/libadwaita-rs" }
+libadwaita = { git = "https://gitlab.gnome.org/World/Rust/libadwaita-rs" }
 wtf = { path = "../wtf" }
 
 [build-dependencies]

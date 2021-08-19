@@ -7,6 +7,7 @@ use gtk4::{
     FileFilter, InfoBar, Label, MessageType, ResponseType, Shortcut, ShortcutController,
     ShortcutTrigger,
 };
+use libadwaita::prelude::ApplicationWindowExt;
 use libadwaita::{ApplicationWindow, HeaderBar, ViewSwitcher};
 
 pub struct AppWindow {}
@@ -43,7 +44,7 @@ impl AppWindow {
 
         let window = ApplicationWindow::new(application);
         window.set_default_size(830, 560);
-        window.set_child(Some(&window_content));
+        ApplicationWindowExt::set_child(&window, Some(&window_content));
         window.add_controller(&shortcut_controller);
 
         let file_chooser = FileChooserNative::new(

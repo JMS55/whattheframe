@@ -23,7 +23,7 @@ And then run your game like so:
 # API
 
 The API consists of 4 functions:
-* [`read_profile_data`] - Used to read a `.wtf` profile.
+* [`read_profile_data`] - Used to read a `.wtf` profile
 * [`Profiler::new_frame`] - Call at the start of your frame
 * [`Profiler::profile_task`] - Call at the top of each scope you want to profile
 * [`Profiler::end_profiling`] - Call _once_ at the end of your game

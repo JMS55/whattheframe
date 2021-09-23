@@ -23,7 +23,7 @@
 //! # API
 //!
 //! The API consists of 4 functions:
-//! * [`read_profile_data`] - Used to read a `.wtf` profile.
+//! * [`read_profile_data`] - Used to read a `.wtf` profile
 //! * [`Profiler::new_frame`] - Call at the start of your frame
 //! * [`Profiler::profile_task`] - Call at the top of each scope you want to profile
 //! * [`Profiler::end_profiling`] - Call _once_ at the end of your game
@@ -107,7 +107,6 @@ use std::time::Duration;
 
 #[cfg(feature = "profile")]
 use {
-    bumpalo::Bump as Arena,
     chrono::offset::Utc,
     flume::Sender,
     once_cell::sync::Lazy,
@@ -139,18 +138,17 @@ static PROFILER: Lazy<Profiler> = Lazy::new(|| {
             let mut file = create_file().expect("WTF: Failed to create file for profile");
 
             #[derive(Serialize)]
-            struct TaskDataS<'a> {
-                name: &'a str,
+            struct TaskDataS {
+                name: &'static str,
                 duration: Duration,
-                subtasks: Vec<&'a Self>,
+                subtasks: Vec<Self>,
             }
 
-            let mut task_arena = Arena::with_capacity(mem::size_of::<TaskDataS>() * 1000);
             let mut frame_number: usize = 0;
             let mut frame = TaskDataS {
                 name: "",
                 duration: Duration::default(),
-                subtasks: Vec::with_capacity(10),
+                subtasks: Vec::new(),
             };
             let mut parent_stack: Vec<*mut TaskDataS> = vec![&mut frame];
 
@@ -164,17 +162,15 @@ static PROFILER: Lazy<Profiler> = Lazy::new(|| {
                             duration: Duration::default(),
                             subtasks: Vec::new(),
                         };
-                        let task_mut_ref: *mut TaskDataS = task_arena.alloc(task);
-                        let task_ref = unsafe { &*task_mut_ref };
-
-                        let parent = *parent_stack.last().unwrap();
-                        let parent_subtasks = unsafe { &mut (*parent).subtasks };
 
                         // Add it to the current parent's subtasks
-                        parent_subtasks.push(task_ref);
+                        let parent = *parent_stack.last().unwrap();
+                        let parent_subtasks = unsafe { &mut (*parent).subtasks };
+                        parent_subtasks.push(task);
 
                         // Push it to the top of the parent stack
-                        parent_stack.push(task_mut_ref);
+                        let task_ref = parent_subtasks.last_mut().unwrap();
+                        parent_stack.push(task_ref);
                     }
                     Ok(ProfilerMessage::TaskEnd { elapsed }) => {
                         // Replace the placeholder with the real duration
@@ -196,7 +192,6 @@ static PROFILER: Lazy<Profiler> = Lazy::new(|| {
                             // Reset for the next frame
                             frame.name = "";
                             frame.subtasks.clear();
-                            task_arena.reset();
                         } else {
                             parent_stack.pop().unwrap();
                         }
